@@ -574,8 +574,23 @@
                             <validate>required_entry</validate>
                         </field>
                     </group>
+                    <!-- =================
+                         Logging group
+                    ================== -->
+                    <group id="fastly_logging" sortOrder="455" translate="label comment" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>
+                            Logging
+                        </label>
+                        <comment>
+                            Configure the Magento 2 logging endpoint for Fastly
+                        </comment>
+                        <field id="toggle_su" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                            <label>Logging Endpoint</label>
+                            <frontend_model>Fastly\Cdn\Block\System\Config\Form\Field\LoggingBtn</frontend_model>
+                        </field>
+                    </group>
                     <!-- ============================
-                        Maintenance Support group
+                         Maintenance Support group
                     ============================= -->
                     <group id="fastly_maintenance_support" sortOrder="485" translate="label comment" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Maintenance Mode</label>
