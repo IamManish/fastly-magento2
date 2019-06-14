@@ -2247,6 +2247,28 @@
           class="form-inline"
           enctype="multipart/form-data">
         <fieldset class="admin__fieldset form-list question">
+            <div class="admin__field field">
+                <label for="condition" class="admin__field-label">
+                    <span><?php /* @noEscape */ echo __("Condition") ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <span id="attach_span" style>
+                        This will happen all the time unless you <a id="attach" href="#">Attach a condition</a>
+                    </span>
+                    <select name="conditions" id="conditions" class="admin__control-select"></select>
+                    <div class="admin__field-note"><a id="detach" href="#">Detach condition</a> <span id="sep">|</span>
+                        <a id="create-condition" href="#">Create a new request condition</a>
+                    </div>
+                </div>
+            </div>
+            <div class="admin__field field">
+                <label for="backend" class="admin__field-label">
+                    <span><?php /* @noEscape */ echo __("Collector URL") ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <select name="backends" id="backends" class="admin__control-select"></select>
+                </div>
+            </div>
         </fieldset>
     </form>
 </script>
@@ -2316,6 +2338,10 @@ $isIoEnabled =                  $block->getConfig()->isImageOptimizationEnabled(
 // Import Export
 $getExportDataUrl =             $block->getUrl('adminhtml/fastlyCdn_ImportExport/getExportData');
 $exportDataUrl =                $block->getUrl('adminhtml/fastlyCdn_ImportExport/saveExportData');
+// Logging
+$getLoggingEndpointUrl =        $block->getUrl('adminhtml/fastlyCdn_Logging/getLoggingEndpoint');
+$createLoggingEndpointUrl =     $block->getUrl('adminhtml/fastlyCdn_Logging/createLoggingEndpoint');
+$deleteLoggingEndpointUrl =     $block->getUrl('adminhtml/fastlyCdn_Logging/deleteLoggingEndpoint');
 // Maintenance Support
 $checkSuSettingUrl =            $block->getUrl('adminhtml/fastlyCdn_Maintenance/CheckSuSetting');
 $toggleSuSettingUrl =           $block->getUrl('adminhtml/fastlyCdn_Maintenance/toggleSuSetting');
@@ -2433,7 +2459,10 @@ $isFastlyEnabled =              $block->getConfig()->isFastlyEnabled();
                     "updateSuIpsUrl": "<?php echo $block->escapeJsQuote($updateSuIpsUrl);?>",
                     "createBackendUrl": "<?php echo $block->escapeJsQuote($createBackendUrl);?>",
                     "getExportDataUrl": "<?php echo $block->escapeJsQuote($getExportDataUrl);?>",
-                    "exportDataUrl": "<?php echo $block->escapeJsQuote($exportDataUrl);?>"
+                    "exportDataUrl": "<?php echo $block->escapeJsQuote($exportDataUrl);?>",
+                    "getLoggingEndpointUrl": "<?php echo $block->escapeJsQuote($getLoggingEndpointUrl);?>",
+                    "createLoggingEndpointUrl": "<?php echo $block->escapeJsQuote($createLoggingEndpointUrl);?>",
+                    "deleteLoggingEndpointUrl": "<?php echo $block->escapeJsQuote($deleteLoggingEndpointUrl);?>"
                 }
             }
         }

@@ -275,7 +275,6 @@ class Api
      */
     private function _purge($uri, $type, $method = \Zend_Http_Client::POST, $payload = null)
     {
-
         if ($method == 'PURGE') {
             // create purge token
             $expiration   = time() + self::PURGE_TOKEN_LIFETIME;
@@ -1357,10 +1356,57 @@ class Api
         return $result;
     }
 
+    /**
+     * @param $id
+     * @return bool|mixed
+     * @throws LocalizedException
+     */
     public function getOwaspSettings($id)
     {
         $url = $this->_getApiServiceUri() . 'wafs/' . $id . '/owasp';
         $result = $this->_fetch($url, \Zend_Http_Client::GET);
+
+        return $result;
+    }
+
+    /**
+     * @param $name
+     * @param $version
+     * @return bool|mixed
+     * @throws LocalizedException
+     */
+    public function getHttpEndpoint($name, $version)
+    {
+        $url = $this->_getApiServiceUri(). 'version/'. $version . '/logging/http/' . $name;
+        $result = $this->_fetch($url, \Zend_Http_Client::GET);
+
+        return $result;
+    }
+
+    /**
+     * @param $params
+     * @param $version
+     * @return bool|mixed
+     * @throws LocalizedException
+     */
+    public function createHttpEndpoint($params, $version)
+    {
+        $url = $this->_getApiServiceUri(). 'version/' . $version . '/logging/http';
+        $result = $this->_fetch($url, \Zend_Http_Client::POST, $params);
+
+        return $result;
+    }
+
+    /**
+     * @param $name
+     * @param $version
+     * @return bool|mixed
+     * @throws LocalizedException
+     */
+    public function deleteHttpEndpoint($name, $version)
+    {
+        $url = $this->_getApiServiceUri(). 'version/' . $version . '/logging/http/' . $name;
+        $result = $this->_fetch($url, \Zend_Http_Client::DELETE);
 
         return $result;
     }
