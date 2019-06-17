@@ -17,6 +17,7 @@ define([
         let conditionPriority = null;
         let conditionModal;
         let backends;
+        let endpointConfigStatus;
 
         let active_version = serviceStatus.active_version;
 
@@ -79,8 +80,15 @@ define([
                     $('#create-condition').hide();
                     $('#sep').hide();
                     let backendHtml = '';
+                    let endpointConfig = response.endpoint_config;
+                    endpointConfigStatus = response.status;
                     $.each(backends, function (index, backend) {
-                        backendHtml += '<option value="'+backend.hostname+'">'+backend.name+' ('+backend.hostname+')</option>';
+                        backendHtml += '<option value="'+backend.hostname+'"';
+                        let backendHostname = 'https://' + backend.hostname;
+                        if (endpointConfigStatus !== 'false' && endpointConfig.url === backendHostname) {
+                            backendHtml += 'selected="selected"'
+                        }
+                        backendHtml += '>'+backend.name+' ('+backend.hostname+')</option>';
                     });
                     $('#backends').html(backendHtml);
                 });
@@ -89,7 +97,7 @@ define([
 
         $('body').on('click', 'button#fastly_logging_delete_btn', function () {
             resetAllMessages();
-            deleteLoggingEndpoint(active_version, true).done(function (response){
+            deleteLoggingEndpoint(active_version, true).done(function (response) {
                 if (response.status === true) {
                     active_version = response.active_version;
                     modal.modal('closeModal');
@@ -136,7 +144,7 @@ define([
             $('.upload-button span').text('Create');
         });
 
-        function getLoggingEndpoint(loaderVisibility)
+        function getLoggingEndpoint(active_version, loaderVisibility)
         {
             return $.ajax({
                 type: "POST",
@@ -180,7 +188,8 @@ define([
                 data: {
                     'active_version': active_version,
                     'backend': $('#backends').val(),
-                    'condition': $('#conditions').val()
+                    'condition': $('#conditions').val(),
+                    'endpoint_status': endpointConfigStatus
                 },
                 success: function (response) {
                     if (response.status === true) {

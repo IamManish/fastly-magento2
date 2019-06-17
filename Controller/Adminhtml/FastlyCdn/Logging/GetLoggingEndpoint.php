@@ -70,7 +70,8 @@ class GetLoggingEndpoint extends Action
 
             if ($endpointConfig == false) {
                 return $result->setData([
-                    'status' => false
+                    'status'            => false,
+                    'endpoint_config'   => $endpointConfig
                 ]);
             }
 

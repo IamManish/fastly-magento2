@@ -78,7 +78,14 @@ class DeleteLoggingEndpoint extends Action
             $this->vcl->checkCurrentVersionActive($service->versions, $activeVersion);
             $currActiveVersion = $this->vcl->getCurrentVersion($service->versions);
             $clone = $this->api->cloneVersion($currActiveVersion);
-            $this->api->deleteHttpEndpoint(Config::LOGGING_ENDPOINT_NAME, $clone->number);
+            $deleteEndpoint = $this->api->deleteHttpEndpoint(Config::LOGGING_ENDPOINT_NAME, $clone->number);
+
+            if (!$deleteEndpoint) {
+                return $result->setData([
+                    'status'    => false,
+                    'msg'       => 'Could not delete logging endpoint'
+                ]);
+            }
 
             $this->api->validateServiceVersion($clone->number);
             $this->api->activateVersion($clone->number);

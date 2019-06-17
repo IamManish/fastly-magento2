@@ -74,6 +74,7 @@ class CreateLoggingEndpoint extends Action
             $activeVersion = $this->getRequest()->getParam('active_version');
             $condition = $this->getRequest()->getParam('condition');
             $backend = $this->getRequest()->getParam('backend');
+            $endpointStatus = $this->getRequest()->getParam('endpoint_status');
             $service = $this->api->checkServiceDetails();
             $this->vcl->checkCurrentVersionActive($service->versions, $activeVersion);
             $currActiveVersion = $this->vcl->getCurrentVersion($service->versions);
@@ -89,14 +90,21 @@ class CreateLoggingEndpoint extends Action
                     'response_condition' => $condition
                 ];
             }
-            $createEndpoint = $this->api->createHttpEndpoint($params, $clone->number);
+            if ($endpointStatus != 'true') {
+                $configureEndpoint = $this->api->createHttpEndpoint($params, $clone->number);
+            } else {
+                $configureEndpoint = $this->api->updateHttpEndpoint($params, $clone->number, Config::LOGGING_ENDPOINT_NAME);
+            }
 
-            if (!$createEndpoint) {
+            if (!$configureEndpoint) {
                 return $result->setData([
                     'status'    => false,
                     'msg'       => 'Failed to configure logging endpoint'
                 ]);
             }
+
+            $this->api->validateServiceVersion($clone->number);
+            $this->api->activateVersion($clone->number);
 
             return $result->setData([
                 'status'    => true

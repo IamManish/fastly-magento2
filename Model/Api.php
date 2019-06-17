@@ -1398,6 +1398,21 @@ class Api
     }
 
     /**
+     * @param $params
+     * @param $version
+     * @param $name
+     * @return bool|mixed
+     * @throws LocalizedException
+     */
+    public function updateHttpEndpoint($params, $version, $name)
+    {
+        $url = $this->_getApiServiceUri(). 'version/' . $version . '/logging/http/' . $name;
+        $result = $this->_fetch($url, \Zend_Http_Client::PUT, $params);
+
+        return $result;
+    }
+
+    /**
      * @param $name
      * @param $version
      * @return bool|mixed
