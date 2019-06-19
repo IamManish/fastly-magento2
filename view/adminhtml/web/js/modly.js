@@ -172,7 +172,8 @@ define([
                 type: "POST",
                 url: config.toggleModulesUrl,
                 data: {
-                    'checked_modules': checkedModules
+                    'checked_modules': checkedModules,
+                    'form_key': config.getFormKey
                 },
                 showLoader: true,
                 success: function (data) {

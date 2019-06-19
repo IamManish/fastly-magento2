@@ -93,7 +93,11 @@ class CreateLoggingEndpoint extends Action
             if ($endpointStatus != 'true') {
                 $configureEndpoint = $this->api->createHttpEndpoint($params, $clone->number);
             } else {
-                $configureEndpoint = $this->api->updateHttpEndpoint($params, $clone->number, Config::LOGGING_ENDPOINT_NAME);
+                $configureEndpoint = $this->api->updateHttpEndpoint(
+                    $params,
+                    $clone->number,
+                    Config::LOGGING_ENDPOINT_NAME
+                );
             }
 
             if (!$configureEndpoint) {
