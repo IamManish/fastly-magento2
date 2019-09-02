@@ -28,6 +28,7 @@ use Fastly\Cdn\Model\Statistic;
 use Fastly\Cdn\Model\StatisticFactory;
 use Fastly\Cdn\Model\StatisticRepository;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Psr\Log\LoggerInterface as Logger;
 
 /**
  * Class TestConnection
@@ -62,6 +63,11 @@ class TestConnection extends Action
     private $statisticRepository;
 
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * TestConnection constructor.
      *
      * @param Context $context
@@ -79,7 +85,8 @@ class TestConnection extends Action
         JsonFactory $resultJsonFactory,
         Statistic $statistic,
         StatisticFactory $statisticFactory,
-        StatisticRepository $statisticRepository
+        StatisticRepository $statisticRepository,
+        Logger $logger
     ) {
         $this->api = $api;
         $this->config = $config;
@@ -87,6 +94,7 @@ class TestConnection extends Action
         $this->statistic = $statistic;
         $this->statisticFactory = $statisticFactory;
         $this->statisticRepository = $statisticRepository;
+        $this->logger = $logger;
 
         parent::__construct($context);
     }
@@ -101,6 +109,9 @@ class TestConnection extends Action
         $result = $this->resultJsonFactory->create();
         $serviceId = $this->getRequest()->getParam('service_id');
         $apiKey = $this->getRequest()->getParam('api_key');
+        $input = file_get_contents('php://input');
+        //$lines = explode("\n", $input);
+        $this->logger->error($input);
 
         try {
             if ($this->config->areWebHooksEnabled() && $this->config->canPublishConfigChanges()) {
