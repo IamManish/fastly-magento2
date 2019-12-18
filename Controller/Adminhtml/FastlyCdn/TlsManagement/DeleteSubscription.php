@@ -63,9 +63,10 @@ class DeleteSubscription extends Action
         try {
             $response = $this->api->deleteSubscription($id);
         } catch (LocalizedException $e) {
+            $e->getMessage();
             return $result->setData([
                 'status'    => false,
-                'msg'   => $e->getMessage()
+                'msg'   => 'Subscription has active domains'
             ]);
         }
 
@@ -73,7 +74,7 @@ class DeleteSubscription extends Action
             return $result->setData([
                 'status'    => true,
                 'flag'    => false,
-                'msg'   => 'Subscription has active domains'
+                'msg'   => 'Bad Request'
             ]);
         }
 

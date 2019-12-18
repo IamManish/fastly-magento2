@@ -28,7 +28,7 @@ class ApiParametersResolver
                 $domain->tls_activations['id'] = $domain->relationships->tls_activations->data[0]->id;
             } else {
                 $domain->tls_activations = false;
-                $domain->tls_configuratios = false;
+                $domain->tls_configurations = false;
             }
 
             if (!empty($domain->relationships->tls_certificates->data)) {
@@ -64,14 +64,12 @@ class ApiParametersResolver
                         $domain->tls_certificates['name'] = $record->attributes->name;
                         $domain->tls_certificates['not_after'] = $record->attributes->not_after;
                         $domain->tls_certificates['signature_algorithm'] = $record->attributes->signature_algorithm;
-                        unset($included[$key]);
                         continue;
                     }
 
                     $domain->tls_authorizations['state'] = $record->attributes->state;
                     $domain->tls_authorizations['created_at'] = $record->attributes->created_at;
                     $domain->tls_authorizations['challenges'] = $record->attributes->challenges;
-                    unset($included[$key]);
                     continue;
                 }
 
@@ -80,7 +78,6 @@ class ApiParametersResolver
                     $domain->tls_configurations['id'] = $record->relationships->tls_configuration->data->id;
                 }
 
-                unset($included[$key]);
                 continue;
             }
 
@@ -91,7 +88,6 @@ class ApiParametersResolver
                 $domain->tls_authorizations['id'] = $record->relationships->tls_authorizations->data[0]->id;
             }
 
-            unset($included[$key]);
             continue;
         }
         return $domain;

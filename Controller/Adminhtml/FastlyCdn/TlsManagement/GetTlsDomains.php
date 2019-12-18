@@ -73,7 +73,7 @@ class GetTlsDomains extends Action
             ]);
         }
 
-        $this->domainParametersResolver->combineDataAndIncludedDomains($result);
+        $result = $this->domainParametersResolver->combineDataAndIncludedDomains($result);
 
         return $json->setData([
             'status' => true,

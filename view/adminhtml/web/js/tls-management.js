@@ -25,7 +25,7 @@ define([
         /** Certificates messages */
         let certErrorButtonMsg = $('#fastly-error-tls-certifications-button');
         let certSuccessButtonMsg = $('#fastly-success-tls-certifications-button');
-        let certWarningButtonMsg =$('#fastly-warning-tls-certifications-button');
+        let certWarningButtonMsg = $('#fastly-warning-tls-certifications-button');
 
         /** Messages */
         let notAuthorisedMsg = $('#fastly-warning-not-authorized-button-msg');
@@ -45,50 +45,48 @@ define([
             }
         };
 
-        let domainLoader = true;
-        let fastlyGetMeDomains = function () {
-           return getTlsDomains(domainLoader).done(function (response) {
-               domainLoader = false;
+        let getMeFastlyDomains = function(loader) {
+            return getTlsDomains(loader).done(function (response) {
                 let html;
-               $(domainWarningButtonMsg).empty();
-               $(domainWarningButtonMsg).hide();
+                $(domainWarningButtonMsg).empty();
+                $(domainWarningButtonMsg).hide();
                 if (response.status !== true || response.flag !== true) {
                     $('#secure-another-domain').attr('disabled', true);
                     $('#secure-certificate').attr('disabled', true);
                     return $(domainWarningButtonMsg).append(response.msg).show();
                 }
 
-               $('#secure-another-domain').attr('disabled', false);
-               $('#secure-certificate').attr('disabled', false);
+                $('#secure-another-domain').attr('disabled', false);
+                $('#secure-certificate').attr('disabled', false);
 
-               getTlsCertificates(false).done(function (certResponse) {
-                   html = '';
-                   certWarningButtonMsg.empty();
-                   certWarningButtonMsg.hide();
-                   if (certResponse.status !== true || certResponse.flag !== true) {
-                       return certWarningButtonMsg.text($.mage.__(certResponse.msg)).show();
-                   }
+                getTlsCertificates(false).done(function (certResponse) {
+                    html = '';
+                    certWarningButtonMsg.empty();
+                    certWarningButtonMsg.hide();
+                    if (certResponse.status !== true || certResponse.flag !== true) {
+                        return certWarningButtonMsg.text($.mage.__(certResponse.msg)).show();
+                    }
 
-                   $('.loading-tls-certificates').hide();
-                   $('.no-tls-certificates').hide();
-                   $('#tls-certificates-item-container').empty();
-                   certificates = certResponse.certificates;
-                   if (certificates.length !== 0) {
-                       $.each(certificates, function (i, certificate) {
-                           html += generateCertificateTableBody(certificate.attributes.name, certificate.attributes.issuer, certificate.attributes.issued_to, certificate.id);
-                       });
+                    $('.loading-tls-certificates').hide();
+                    $('.no-tls-certificates').hide();
+                    $('#tls-certificates-item-container').empty();
+                    certificates = certResponse.certificates;
+                    if (certificates.length !== 0) {
+                        $.each(certificates, function (i, certificate) {
+                            html += generateCertificateTableBody(certificate.attributes.name, certificate.attributes.issuer, certificate.attributes.issued_to, certificate.id);
+                        });
 
-                       $('#tls-certificates-item-container').append(html);
-                       return;
-                   }
+                        $('#tls-certificates-item-container').append(html);
+                        return;
+                    }
 
-                   $('.no-tls-certificates').text($.mage.__('No tls certificates')).show();
-               });
+                    $('.no-tls-certificates').text($.mage.__('No tls certificates')).show();
+                });
 
                 domains = response.domains;
                 $('.loading-tls-domains').hide();
                 $('.no-tls-domains').hide();
-               $('#tls-domains-item-container').empty();
+                $('#tls-domains-item-container').empty();
                 if (domains.length !== 0) {
                     html = '';
                     $.each(domains, function (i, domain) {
@@ -103,11 +101,7 @@ define([
             });
         };
 
-
-
-        fastlyDomainsTimer = setInterval(function () {
-            return fastlyGetMeDomains();
-        }, 5000);
+        getMeFastlyDomains(true);
 
         $('body').on('click', '.show-domain-info', function (event) {
             tableRow = $(event.target).parent().parent();
@@ -125,13 +119,15 @@ define([
             $('.show-domain-info-item-container').append(html);
             $('.upload-button').remove();
 
-            if (domains[domainName].tls_subscriptions.state === 'pending') {
-                showWarningMessage(proveDomainOwnershipMsg(domains[domainName]));
-            } else if (domains[domainName].tls_subscriptions.state === 'issued' || domains[domainName].tls_activations !== false) {
-                getSpecificConfiguration(domains[domainName].tls_configurations.id, true).done(function (response) {
-                    let html = generateDetailsTable(response.configuration, domains[domainName].tls_certificates.name);
-                    $('.tls-subscription-notice').append(html).show();
-                });
+            if (domains[domainName].tls_subscriptions !== false) {
+                if (domains[domainName].tls_subscriptions.state === 'pending') {
+                    showWarningMessage(proveDomainOwnershipMsg(domains[domainName]));
+                } else if ((domains[domainName].tls_subscriptions.state === 'issued' && domains[domainName].tls_configurations !== false) || domains[domainName].tls_activations !== false) {
+                    getSpecificConfiguration(domains[domainName].tls_configurations.id, true).done(function (response) {
+                        let html = generateDetailsTable(response.configuration, domains[domainName].tls_certificates.name);
+                        $('.tls-subscription-notice').append(html).show();
+                    });
+                }
             }
         });
 
@@ -143,27 +139,27 @@ define([
                     return showErrorMessage(response.msg);
                 }
 
-                clearInterval(fastlyDomainsTimer);
                 let domainName = $(event.target).attr('data-domain');
                 modal.modal('closeModal');
                 domains.splice(domainName, 1);
                 $(tableRow).remove();
                 domainSuccessButtonMsg.text($.mage.__(response.msg)).show();
-                fastlyDomainsTimer = setInterval(function () {
-                     return fastlyGetMeDomains();
-                 }, 5000);
             });
         });
 
         //disable activation
         $('body').on('click', '.disable-tls-activation', function (event) {
             let activation = $(event.target).attr('data-activation');
+            let domainName = $(event.target).attr('id');
             resetAllMessages();
             disableTlsActivation(activation, true).done(function (response) {
                 modal.modal('closeModal');
                 if (response.status !== true || response.flag !== true) {
                     return domainErrorButtonMsg.text($.mage.__(response.msg)).show();
                 }
+
+                domains[domainName].tls_activations = false;
+                domains[domainName].tls_configurations = false;
 
                 domainSuccessButtonMsg.text($.mage.__(response.msg)).show();
             });
@@ -187,6 +183,7 @@ define([
                         return domainErrorButtonMsg.text($.mage.__(response.msg)).show();
                     }
 
+                    getMeFastlyDomains(false);
                     domainSuccessButtonMsg.text($.mage.__(response.msg)).show();
                 });
             });
@@ -303,7 +300,12 @@ define([
                             $('.loading-tls-certificates').hide();
                             let html = generateCertificateTableBody(attributes.name, attributes.issuer, attributes.issued_to, response.data.id);
                             $('#tls-certificates-item-container').append(html);
-                            html = generateSecuredDomainsTableFields(domainName);
+                            html = '';
+                            $.each(response.data.relationships.tls_domains.data, function (i, domain) {
+                                html += generateSecuredDomainsTableFields(domain);
+                                domains[domain.id] = domain;
+
+                            });
                             $('no-tls-domains').hide();
                             $('#tls-domains-item-container').append(html);
                             return certSuccessButtonMsg.text($.mage.__(msg)).show();
@@ -354,7 +356,7 @@ define([
             html += '<td>' + issuer + '</td>';
             html += '<td>' + issuedTo + '</td>';
             html += '<td>' +
-                '<button class="fastly-view-vcl-action show-certificate" data-certificate-number="'+id+'"  style="margin-left:0.5rem;"  title="Show Certificate" type="button"></button>' +
+                '<button class="fastly-view-vcl-action show-certificate" data-certificate-number="' + id + '"  style="margin-left:0.5rem;"  title="Show Certificate" type="button"></button>' +
                 '</td>';
             html += '</tr>';
             return html;
@@ -366,6 +368,7 @@ define([
          */
         function generateTlsCertificateMessage(domain)
         {
+
             if (!domain.tls_certificates) {
                 return '<span class="tls-certificate-message">Domain validation in progress…</span>';
             }
@@ -380,9 +383,9 @@ define([
          */
         function proveDomainOwnershipMsg(domain)
         {
-            return 'Create a ' + domain.tls_authorizations.challenges[0].record_type
-                    + ' for ' + domain.tls_authorizations.challenges[0].record_name
-                    + ' and point it to ' + domain.tls_authorizations.challenges[0].values[0];
+            return 'Create a ' + domain.tls_authorization.challenges[0].record_type
+                + ' for ' + domain.tls_authorization.challenges[0].record_name
+                + ' and point it to ' + domain.tls_authorization.challenges[0].values[0];
         }
 
         /**
@@ -394,9 +397,9 @@ define([
         {
             let html = '';
             html += '<tr>';
-            html += '<td>'+configuration.data.CNAME.toString()+'</td>';
-            html += '<td>'+configuration.data.AAAA.toString()+'</td>';
-            html += '<td>'+configuration.data.A.toString()+'</td>';
+            html += '<td>' + configuration.data.CNAME.toString() + '</td>';
+            html += '<td>' + configuration.data.AAAA.toString() + '</td>';
+            html += '<td>' + configuration.data.A.toString() + '</td>';
             html += '</tr>';
             return html;
         }
@@ -423,10 +426,10 @@ define([
             html += '</thead>';
             html += '<tbody>';
             html += '<tr>';
-            html += '<td>'+configuration.data.attributes.name+'</td>';
-            html += '<td>'+configuration.data.attributes.tls_protocols[0]+'</td>';
-            html += '<td>' + configuration.data.attributes.http_protocols[0] +' and ' + configuration.data.attributes.http_protocols[1] + '</td>';
-            html += '<td>'+certificate+'</td>';
+            html += '<td>' + configuration.data.attributes.name + '</td>';
+            html += '<td>' + configuration.data.attributes.tls_protocols[0] + '</td>';
+            html += '<td>' + configuration.data.attributes.http_protocols[0] + ' and ' + configuration.data.attributes.http_protocols[1] + '</td>';
+            html += '<td>' + certificate + '</td>';
             html += '</tr>';
             html += '</tbody>';
             html += '<tfoot>';
@@ -460,22 +463,25 @@ define([
         function generateTlsStatusMessage(domain)
         {
             if (!domain.tls_activations) {
-                if (domain.tls_subscriptions.state !== 'pending') {
-                    if (domain.tls_subscriptions.state !== 'processing') {
-                        if (domain.tls_subscriptions.state !== 'issued') {
-                            if (!domain.tls_subscriptions && domain.tls_certificates) {
-                                return '<span class="tls-status-message">Ready to enable</span>';
+                if (domain.tls_subscriptions !== undefined) {
+                    if (domain.tls_subscriptions.state !== 'pending') {
+                        if (domain.tls_subscriptions.state !== 'processing') {
+                            if (domain.tls_subscriptions.state !== 'issued') {
+                                if (!domain.tls_subscriptions && domain.tls_certificates) {
+                                    return '<span class="tls-status-message">Ready to enable</span>';
+                                }
+                                return '<span class="tls-status-message"></span>';
                             }
-                            return '<span class="tls-status-message"></span>';
+
+                            return '<span class="tls-status-message">Ready to enable</span>';
                         }
 
-                        return '<span class="tls-status-message">Ready to enable</span>';
+                        return '<span class="tls-status-message">The certificate has been requested. Fastly is waiting for the Certificate Authority’s response.</span><br><span class="tls-status-step">Step 2 of 3</span>';
                     }
 
-                    return '<span class="tls-status-message">The certificate has been requested. Fastly is waiting for the Certificate Authority’s response.</span><br><span class="tls-status-step">Step 2 of 3</span>';
+                    return '<span class="tls-status-message">Fastly is verifying domain ownership.</span><br><span class="tls-status-step">Step 1 of 3</span>';
                 }
-
-                return '<span class="tls-status-message">Fastly is verifying domain ownership.</span><br><span class="tls-status-step">Step 1 of 3</span>';
+                return '<span class="tls-status-message">Ready to enable</span>';
             }
             return '<span class="tls-status-message">Enabled - Certificate issued. Deploying across Fastly’s global network.</span>';
         }
@@ -493,7 +499,7 @@ define([
                 }
 
                 return '<span class="action-delete delete-tls-subscription" data-domain="'+domain.id+'"  id="'+domain.tls_subscriptions.id+'" title="Delete '+domain.tls_subscriptions.id+'" type="button"></span>'
-                        + '<span class="change-tls-state disable-tls-subscription">Enable TLS</span>'
+                    + '<span class="change-tls-state enable-tls-activation tls-button" id="'+domain.id+'" data-certificate="'+domain.tls_certificates.id+'">Enable TLS</span>';
             }
 
             if (!domain.tls_activations) {
@@ -512,7 +518,7 @@ define([
         {
             let html = '';
             html += '<tr>';
-            html += '<td>'+domain.id+'</td>';
+            html += '<td>' + domain.id + '</td>';
             html += '<td>' + generateTlsStatusMessage(domain) + '</td>';
             html += '<td>' + generateTlsCertificateMessage(domain) + '</td>';
             html += '<td>' + generateTlsActionField(domain) + '</td>';
@@ -546,7 +552,7 @@ define([
         function generateSecuredDomainsTableFields(domain)
         {
             let html = '';
-            html += '<tr id="'+domain.id+'">';
+            html += '<tr id="' + domain.id + '">';
             html += '<td>' + domain.id + '</td>';
             if (!domain.tls_subscriptions) {
                 if (!domain.tls_activations) {
@@ -557,7 +563,7 @@ define([
             } else {
                 html += '<td>' + domain.tls_subscriptions.state + '</td>';
             }
-            html += '<td><button class="fastly-view-vcl-action show-domain-info" id="' + domain.id + '" style="margin-left:0.5rem;"  title="Show Domain '+domain.id+'" type="button"></button></td>';
+            html += '<td><button class="fastly-view-vcl-action show-domain-info" id="' + domain.id + '" style="margin-left:0.5rem;"  title="Show Domain ' + domain.id + '" type="button"></button></td>';
             html += '</tr>';
             return html;
         }
@@ -567,8 +573,7 @@ define([
          * @param configurations
          * @returns {string}
          */
-        function generateDomainsTableFields(configurations)
-        {
+        function generateDomainsTableFields(configurations) {
             let html = '';
             html += '<tr>';
             html += '<td><input name="domain-name" class="input-text admin__control-text domain-name" type="text"></td>';
@@ -593,16 +598,15 @@ define([
          * @param algorithm
          * @returns {string}
          */
-        function generateShowCertificateFields(id, createdAt, issuedTo, issuer, expired, algorithm)
-        {
+        function generateShowCertificateFields(id, createdAt, issuedTo, issuer, expired, algorithm) {
             let html = '';
             html += '<tr>';
-            html += '<td>'+id+'</td>';
-            html += '<td>'+createdAt+'</td>';
-            html += '<td>'+issuedTo+'</td>';
-            html += '<td>'+issuer+'</td>';
-            html += '<td>'+expired+'</td>';
-            html += '<td>'+algorithm+'</td>';
+            html += '<td>' + id + '</td>';
+            html += '<td>' + createdAt + '</td>';
+            html += '<td>' + issuedTo + '</td>';
+            html += '<td>' + issuer + '</td>';
+            html += '<td>' + expired + '</td>';
+            html += '<td>' + algorithm + '</td>';
             html += '</tr>';
             return html;
         }
@@ -614,8 +618,7 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function getTlsConfigurations(loader)
-        {
+        function getTlsConfigurations(loader) {
             return $.ajax({
                 type: 'get',
                 url: config.getTlsConfigurations,
@@ -629,13 +632,12 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function disableTlsActivation(activation, loader)
-        {
+        function disableTlsActivation(activation, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.disableTlsActivation,
                 showLoader: loader,
-                data: {'activation':activation}
+                data: {'activation': activation}
             });
         }
 
@@ -647,13 +649,12 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function enableTlsActivation(domain, certificate, configuration, loader)
-        {
+        function enableTlsActivation(domain, certificate, configuration, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.enableTlsActivation,
                 showLoader: loader,
-                data: {'domain':domain, 'certificate':certificate, 'configuration':configuration}
+                data: {'domain': domain, 'certificate': certificate, 'configuration': configuration}
             });
         }
 
@@ -664,13 +665,12 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function saveDomain(name, conf, loader)
-        {
+        function saveDomain(name, conf, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.secureAnotherDomain,
                 showLoader: loader,
-                data: {'tls_domains':name, 'tls_configuration': conf}
+                data: {'tls_domains': name, 'tls_configuration': conf}
             });
         }
 
@@ -679,8 +679,7 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function getTlsSubscriptions(loader)
-        {
+        function getTlsSubscriptions(loader) {
             return $.ajax({
                 type: 'get',
                 url: config.getTlsSubscriptions,
@@ -693,8 +692,7 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function getTlsDomains(loader)
-        {
+        function getTlsDomains(loader) {
             return $.ajax({
                 type: 'get',
                 url: config.getTlsDomains,
@@ -707,12 +705,11 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function getTlsCertificates(loader)
-        {
+        function getTlsCertificates(loader) {
             return $.ajax({
-               type: 'get',
-               url: config.getTlsCertificates,
-               showLoader: loader
+                type: 'get',
+                url: config.getTlsCertificates,
+                showLoader: loader
             });
         }
 
@@ -724,8 +721,7 @@ define([
          * @param form_key
          * @returns {jQuery}
          */
-        function createTlsCertificate(loader, certificate, cert_name, form_key)
-        {
+        function createTlsCertificate(loader, certificate, cert_name, form_key) {
             return $.ajax({
                 type: 'post',
                 url: config.createTlsCertificate,
@@ -742,8 +738,7 @@ define([
          * @param form_key
          * @returns {jQuery}
          */
-        function createTlsPrivateKey(loader, private_key, key_name, form_key)
-        {
+        function createTlsPrivateKey(loader, private_key, key_name, form_key) {
             return $.ajax({
                 type: 'post',
                 url: config.createTlsPrivateKey,
@@ -758,12 +753,11 @@ define([
          * @param formKey
          * @param loader
          */
-        function getSpecificCertificate(id, formKey, loader)
-        {
+        function getSpecificCertificate(id, formKey, loader) {
             return $.ajax({
                 type: 'post',
                 url: config.getCertificateWithId,
-                data: {'form_key':formKey, 'id':id},
+                data: {'form_key': formKey, 'id': id},
                 showLoader: loader
             });
         }
@@ -774,12 +768,11 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function getSpecificConfiguration(id, loader)
-        {
+        function getSpecificConfiguration(id, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.getConfigurationWithId,
-                data: {'id':id},
+                data: {'id': id},
                 showLoader: loader
             });
         }
@@ -790,12 +783,11 @@ define([
          * @param loader
          * @returns {jQuery}
          */
-        function deletePrivateKey(privateKey, loader)
-        {
+        function deletePrivateKey(privateKey, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.deletePrivateKey,
-                data: {formKey, 'privateKey':privateKey},
+                data: {formKey, 'privateKey': privateKey},
                 showLoader: loader
             });
         }
@@ -805,12 +797,11 @@ define([
          * @param id
          * @param loader
          */
-        function deleteSubscription(id, loader)
-        {
+        function deleteSubscription(id, loader) {
             return $.ajax({
                 type: 'get',
                 url: config.deleteSubscription,
-                data: {'id':id},
+                data: {'id': id},
                 showLoader: loader
             });
         }

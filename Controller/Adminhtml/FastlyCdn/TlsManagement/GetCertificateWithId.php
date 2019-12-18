@@ -77,6 +77,12 @@ class GetCertificateWithId extends Action
             ]);
         }
 
+        foreach ($response->data->relationships->tls_domains->data as $domain) {
+            $domain->tls_certificates = [];
+            $domain->tls_certificates['name'] = $response->data->attributes->name;
+            $domain->tls_certificates['id'] = $response->data->id;
+        }
+
         return $result->setData([
             'status'    => true,
             'flag'  => true,
